@@ -4,7 +4,7 @@
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!! IOS XR Configuration 6.0.0
-!! Last configuration change at Sun Jun  5 19:34:00 2016 by cisco
+!! Last configuration change at Sun Jun  5 22:27:30 2016 by cisco
 !
 hostname XR-1
 cdp
@@ -26,6 +26,29 @@ interface GigabitEthernet0/0/0/2
 interface GigabitEthernet0/0/0/3
  ipv4 address 10.1.111.1 255.255.255.0
 !
+router eigrp EIGRP-10
+ address-family ipv4
+  router-id 10.1.254.1
+  passive-interface default
+  log-neighbor-changes
+  log-neighbor-warnings
+  autonomous-system 10
+  interface Loopback0
+  !
+  interface GigabitEthernet0/0/0/0
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/1
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/2
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/3
+   passive-interface disable
+  !
+ !
+!
 end</entry>
         </extensions>
         <interface id="0" name="GigabitEthernet0/0/0/0"/>
@@ -37,7 +60,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!! IOS XR Configuration 6.0.0
-!! Last configuration change at Sun Jun  5 19:33:52 2016 by cisco
+!! Last configuration change at Sun Jun  5 22:27:31 2016 by cisco
 !
 hostname XR-2
 cdp
@@ -59,6 +82,28 @@ interface GigabitEthernet0/0/0/2
 interface GigabitEthernet0/0/0/3
  ipv4 address 10.1.211.2 255.255.255.0
 !
+router eigrp EIGRP-10
+ address-family ipv4
+  router-id 10.1.254.2
+  passive-interface default
+  log-neighbor-changes
+  autonomous-system 10
+  interface Loopback0
+  !
+  interface GigabitEthernet0/0/0/0
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/1
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/2
+   passive-interface disable
+  !
+  interface GigabitEthernet0/0/0/3
+   passive-interface disable
+  !
+ !
+!
 end</entry>
         </extensions>
         <interface id="0" name="GigabitEthernet0/0/0/0"/>
@@ -70,7 +115,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:38 UTC Sun Jun 5 2016
+! Last configuration change at 22:23:23 UTC Sun Jun 5 2016
 !
 version 15.2
 service timestamps debug datetime msec
@@ -106,6 +151,8 @@ spanning-tree extend system-id
 !
 vlan internal allocation policy ascending
 !
+vlan 10-11,100-101 
+!
 ! 
 !
 !
@@ -130,12 +177,14 @@ interface GigabitEthernet0/1
  description UPLINK-to-XR-01
  no switchport
  ip address 10.1.13.3 255.255.255.0
+ ip summary-address eigrp 10 10.10.0.0 255.255.0.0
  negotiation auto
 !
 interface GigabitEthernet0/2
  description UPLINK-to-XR-02
  no switchport
  ip address 10.1.23.3 255.255.255.0
+ ip summary-address eigrp 10 10.10.0.0 255.255.0.0
  negotiation auto
 !
 interface GigabitEthernet0/3
@@ -145,20 +194,62 @@ interface GigabitEthernet0/3
  negotiation auto
 !
 interface GigabitEthernet1/0
+ switchport trunk allowed vlan 10,100
  switchport trunk encapsulation dot1q
  switchport mode trunk
- shutdown
  media-type rj45
  negotiation auto
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet1/1
+ switchport trunk allowed vlan 11,101
  switchport trunk encapsulation dot1q
  switchport mode trunk
- shutdown
  media-type rj45
  negotiation auto
  spanning-tree link-type point-to-point
+!
+interface Vlan10
+ ip address 10.10.10.2 255.255.255.0
+ standby version 2
+ standby 10 ip 10.10.10.1
+ standby 10 priority 110
+ standby 10 preempt delay minimum 30
+!
+interface Vlan11
+ ip address 10.10.11.2 255.255.255.0
+ standby version 2
+ standby 11 ip 10.10.11.1
+ standby 11 priority 90
+!
+interface Vlan100
+ ip address 10.10.100.2 255.255.255.0
+ standby version 2
+ standby 100 ip 10.10.100.1
+ standby 100 priority 110
+ standby 100 preempt delay minimum 30
+!
+interface Vlan101
+ ip address 10.10.101.2 255.255.255.0
+ standby version 2
+ standby 101 ip 10.10.101.1
+ standby 101 priority 90
+!
+!
+router eigrp 10
+ network 10.1.13.3 0.0.0.0
+ network 10.1.23.3 0.0.0.0
+ network 10.10.10.2 0.0.0.0
+ network 10.10.11.2 0.0.0.0
+ network 10.10.34.3 0.0.0.0
+ network 10.10.100.2 0.0.0.0
+ network 10.10.101.2 0.0.0.0
+ network 10.10.254.3 0.0.0.0
+ passive-interface default
+ no passive-interface GigabitEthernet0/1
+ no passive-interface GigabitEthernet0/2
+ no passive-interface GigabitEthernet0/3
+ eigrp router-id 10.10.254.3
 !
 ip forward-protocol nd
 !
@@ -218,7 +309,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:35 UTC Sun Jun 5 2016
+! Last configuration change at 22:23:39 UTC Sun Jun 5 2016
 !
 version 15.2
 service timestamps debug datetime msec
@@ -254,6 +345,8 @@ spanning-tree extend system-id
 !
 vlan internal allocation policy ascending
 !
+vlan 10-11,100-101 
+!
 ! 
 !
 !
@@ -285,29 +378,74 @@ interface GigabitEthernet0/1
  description UPLINK-to-XR-01
  no switchport
  ip address 10.1.14.4 255.255.255.0
+ ip summary-address eigrp 10 10.10.0.0 255.255.0.0
  negotiation auto
 !
 interface GigabitEthernet0/2
  description UPLINK-to-XR-02
  no switchport
  ip address 10.1.24.4 255.255.255.0
+ ip summary-address eigrp 10 10.10.0.0 255.255.0.0
  negotiation auto
 !
 interface GigabitEthernet1/0
+ switchport trunk allowed vlan 10,100
  switchport trunk encapsulation dot1q
  switchport mode trunk
- shutdown
  media-type rj45
  negotiation auto
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet1/1
+ switchport trunk allowed vlan 11,101
  switchport trunk encapsulation dot1q
  switchport mode trunk
- shutdown
  media-type rj45
  negotiation auto
  spanning-tree link-type point-to-point
+!
+interface Vlan10
+ ip address 10.10.10.3 255.255.255.0
+ standby version 2
+ standby 10 ip 10.10.10.1
+ standby 10 priority 90
+!
+interface Vlan11
+ ip address 10.10.11.3 255.255.255.0
+ standby version 2
+ standby 11 ip 10.10.11.1
+ standby 11 priority 110
+ standby 11 preempt delay minimum 30
+ shutdown
+!
+interface Vlan100
+ ip address 10.10.100.3 255.255.255.0
+ standby version 2
+ standby 100 ip 10.10.100.1
+ standby 100 priority 90
+!
+interface Vlan101
+ ip address 10.10.101.3 255.255.255.0
+ standby version 2
+ standby 101 ip 10.10.101.1
+ standby 101 priority 110
+ standby 101 preempt delay minimum 30
+!
+!
+router eigrp 10
+ network 10.1.14.4 0.0.0.0
+ network 10.1.24.4 0.0.0.0
+ network 10.10.10.3 0.0.0.0
+ network 10.10.11.3 0.0.0.0
+ network 10.10.34.4 0.0.0.0
+ network 10.10.100.3 0.0.0.0
+ network 10.10.101.3 0.0.0.0
+ network 10.10.254.4 0.0.0.0
+ passive-interface default
+ no passive-interface GigabitEthernet0/3
+ no passive-interface GigabitEthernet0/1
+ no passive-interface GigabitEthernet0/2
+ eigrp router-id 10.10.254.4
 !
 ip forward-protocol nd
 !
@@ -367,7 +505,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:37 UTC Sun Jun 5 2016
+! Last configuration change at 22:25:10 UTC Sun Jun 5 2016
 !
 version 15.2
 service timestamps debug datetime msec
@@ -403,6 +541,8 @@ spanning-tree extend system-id
 !
 vlan internal allocation policy ascending
 !
+vlan 10,100 
+!
 ! 
 !
 !
@@ -421,6 +561,7 @@ interface GigabitEthernet0/0
  negotiation auto
 !
 interface GigabitEthernet0/1
+ switchport trunk allowed vlan 10,100
  switchport trunk encapsulation dot1q
  switchport mode trunk
  media-type rj45
@@ -428,6 +569,7 @@ interface GigabitEthernet0/1
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet0/2
+ switchport trunk allowed vlan 10,100
  switchport trunk encapsulation dot1q
  switchport mode trunk
  media-type rj45
@@ -435,8 +577,12 @@ interface GigabitEthernet0/2
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet0/3
+ description ACCESSO
+ switchport access vlan 10
+ switchport mode access
  media-type rj45
  negotiation auto
+ spanning-tree portfast edge
 !
 ip forward-protocol nd
 !
@@ -494,7 +640,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:38 UTC Sun Jun 5 2016
+! Last configuration change at 22:22:56 UTC Sun Jun 5 2016
 !
 version 15.2
 service timestamps debug datetime msec
@@ -530,6 +676,8 @@ spanning-tree extend system-id
 !
 vlan internal allocation policy ascending
 !
+vlan 11,101 
+!
 ! 
 !
 !
@@ -548,6 +696,7 @@ interface GigabitEthernet0/0
  negotiation auto
 !
 interface GigabitEthernet0/1
+ switchport trunk allowed vlan 11,101
  switchport trunk encapsulation dot1q
  switchport mode trunk
  media-type rj45
@@ -555,6 +704,7 @@ interface GigabitEthernet0/1
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet0/2
+ switchport trunk allowed vlan 11,101
  switchport trunk encapsulation dot1q
  switchport mode trunk
  media-type rj45
@@ -562,8 +712,12 @@ interface GigabitEthernet0/2
  spanning-tree link-type point-to-point
 !
 interface GigabitEthernet0/3
+ description ACCESSO
+ switchport access vlan 11
+ switchport mode access
  media-type rj45
  negotiation auto
+ spanning-tree portfast edge
 !
 ip forward-protocol nd
 !
@@ -621,7 +775,7 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:38 UTC Sun Jun 5 2016
+! Last configuration change at 22:25:28 UTC Sun Jun 5 2016
 !
 version 15.6
 service timestamps debug datetime msec
@@ -703,6 +857,17 @@ interface GigabitEthernet0/2
  speed auto
  media-type rj45
 !
+!
+router eigrp 10
+ network 10.1.111.11 0.0.0.0
+ network 10.1.211.11 0.0.0.0
+ network 10.1.254.11 0.0.0.0
+ passive-interface default
+ no passive-interface GigabitEthernet0/0
+ no passive-interface GigabitEthernet0/1
+ no passive-interface GigabitEthernet0/2
+ eigrp router-id 10.1.254.11
+!
 ip forward-protocol nd
 !
 !
@@ -743,6 +908,7 @@ banner login `
 **************************************************************************`
 !
 line con 0
+ logging synchronous
 line aux 0
 line vty 0 4
  login
@@ -759,14 +925,14 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:55 UTC Sun Jun 5 2016
+! Last configuration change at 22:26:04 UTC Sun Jun 5 2016
 !
 version 15.6
 service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
-hostname Router
+hostname A
 !
 boot-start-marker
 boot-end-marker
@@ -793,6 +959,7 @@ mmi snmp-timeout 180
 !
 !
 !
+no ip domain lookup
 ip cef
 no ipv6 cef
 !
@@ -826,8 +993,7 @@ interface GigabitEthernet0/0
  media-type rj45
 !
 interface GigabitEthernet0/1
- no ip address
- shutdown
+ ip address 10.10.10.100 255.255.255.0
  duplex auto
  speed auto
  media-type rj45
@@ -837,6 +1003,7 @@ ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 10.10.10.1
 !
 !
 !
@@ -887,14 +1054,14 @@ end</entry>
         <extensions>
             <entry key="Auto-generate config" type="Boolean">false</entry>
             <entry key="config" type="String">!
-! Last configuration change at 19:35:56 UTC Sun Jun 5 2016
+! Last configuration change at 22:25:48 UTC Sun Jun 5 2016
 !
 version 15.6
 service timestamps debug datetime msec
 service timestamps log datetime msec
 no service password-encryption
 !
-hostname Router
+hostname B
 !
 boot-start-marker
 boot-end-marker
@@ -921,6 +1088,7 @@ mmi snmp-timeout 180
 !
 !
 !
+no ip domain lookup
 ip cef
 no ipv6 cef
 !
@@ -954,8 +1122,7 @@ interface GigabitEthernet0/0
  media-type rj45
 !
 interface GigabitEthernet0/1
- no ip address
- shutdown
+ ip address 10.10.11.100 255.255.255.0
  duplex auto
  speed auto
  media-type rj45
@@ -965,6 +1132,7 @@ ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 10.10.11.1
 !
 !
 !
