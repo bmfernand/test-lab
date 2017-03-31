@@ -1,0 +1,860 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<topology xmlns="http://www.cisco.com/VIRL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" schemaVersion="0.9" xsi:schemaLocation="http://www.cisco.com/VIRL https://raw.github.com/CiscoVIRL/schema/v0.9/virl.xsd">
+    <extensions>
+        <entry key="management_network" type="String">user</entry>
+    </extensions>
+    <node name="csr1000v-1" type="SIMPLE" subtype="CSR1000v" location="565,220">
+        <extensions>
+            <entry key="AutoNetkit.ASN" type="Integer">1</entry>
+            <entry key="config" type="String">!
+! Last configuration change at 22:44:14 UTC Fri Mar 31 2017
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname CORE
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+
+no ip domain lookup
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+license udi pid CSR1000V sn 9EH635QUFS6
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+! 
+! 
+! 
+! 
+! 
+! 
+!
+!
+interface GigabitEthernet1
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet2
+ ip address 192.168.12.1 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 10 area 0.0.0.0
+ negotiation auto
+!
+interface GigabitEthernet3
+ ip address 192.168.13.1 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 10 area 0.0.0.0
+ negotiation auto
+!
+router ospf 10
+ router-id 1.1.1.1
+!
+!
+virtual-service csr_mgmt
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+ip tftp source-interface GigabitEthernet1
+!
+!
+!
+!
+!
+control-plane
+!
+ !
+ !
+ !
+ !
+!
+!
+!
+!
+!
+line con 0
+ stopbits 1
+line vty 0
+ login
+line vty 1
+ login
+ length 0
+line vty 2 4
+ login
+!
+!
+end</entry>
+        </extensions>
+        <interface id="0" name="GigabitEthernet2"/>
+        <interface id="1" name="GigabitEthernet3"/>
+    </node>
+    <node name="csr1000v-2" type="SIMPLE" subtype="CSR1000v" location="390,345">
+        <extensions>
+            <entry key="AutoNetkit.ASN" type="Integer">1</entry>
+            <entry key="config" type="String">!
+! Last configuration change at 22:44:14 UTC Fri Mar 31 2017
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname HUB
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition BE
+ rd 20:20
+ !
+ address-family ipv4
+ exit-address-family
+!
+vrf definition FE
+ rd 10:10
+ !
+ address-family ipv4
+ exit-address-family
+!
+!
+no aaa new-model
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+
+no ip domain lookup
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+license udi pid CSR1000V sn 9LO161EU1N1
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+! 
+crypto keyring KR vrf FE 
+  pre-shared-key address 0.0.0.0 0.0.0.0 key cisco
+!
+!
+!
+!
+!
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+!
+crypto isakmp policy 20
+ encr aes 256
+ hash sha512
+ authentication pre-share
+ group 24
+crypto isakmp profile IKE-PROF
+   keyring KR
+   match identity address 0.0.0.0 FE
+!
+!
+crypto ipsec transform-set 3DES esp-3des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set AES-256 esp-aes 256 esp-sha512-hmac 
+ mode tunnel
+!
+crypto ipsec profile IPSEC-PROF
+ set transform-set 3DES AES-256 
+ set isakmp-profile IKE-PROF
+ responder-only
+!
+!
+!
+!
+!
+!
+! 
+! 
+! 
+! 
+! 
+! 
+!
+!
+interface Loopback0
+ vrf forwarding FE
+ ip address 2.2.2.2 255.255.255.255
+ ip ospf 10 area 0.0.0.0
+!
+interface Tunnel100
+ vrf forwarding BE
+ ip address 172.16.23.2 255.255.255.0
+ tunnel source Loopback0
+ tunnel destination 3.3.3.3
+ tunnel vrf FE
+ tunnel protection ipsec profile IPSEC-PROF shared
+!
+interface GigabitEthernet1
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet2
+ vrf forwarding FE
+ ip address 192.168.12.2 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 10 area 0.0.0.0
+ negotiation auto
+!
+interface GigabitEthernet3
+ vrf forwarding BE
+ ip address 10.1.1.1 255.255.255.0
+ negotiation auto
+!
+router ospf 10 vrf FE
+ router-id 2.2.2.2
+ passive-interface default
+ no passive-interface GigabitEthernet2
+!
+router bgp 1
+ bgp router-id 2.2.2.2
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ !
+ address-family ipv4 vrf BE
+  bgp router-id 2.2.2.2
+  network 10.1.1.0 mask 255.255.255.0
+  neighbor 172.16.23.3 remote-as 1
+  neighbor 172.16.23.3 timers 10 30
+  neighbor 172.16.23.3 activate
+ exit-address-family
+!
+!
+virtual-service csr_mgmt
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+ip tftp source-interface GigabitEthernet1
+!
+!
+!
+!
+!
+control-plane
+!
+ !
+ !
+ !
+ !
+!
+!
+!
+!
+!
+line con 0
+ stopbits 1
+line vty 0
+ login
+line vty 1
+ login
+ length 0
+line vty 2 4
+ login
+!
+!
+end</entry>
+        </extensions>
+        <interface id="0" name="GigabitEthernet2"/>
+        <interface id="1" name="GigabitEthernet3"/>
+    </node>
+    <node name="csr1000v-3" type="SIMPLE" subtype="CSR1000v" location="763,345">
+        <extensions>
+            <entry key="AutoNetkit.ASN" type="Integer">1</entry>
+            <entry key="config" type="String">!
+! Last configuration change at 22:44:14 UTC Fri Mar 31 2017
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no platform punt-keepalive disable-kernel-core
+platform console serial
+!
+hostname SPOKE
+!
+boot-start-marker
+boot-end-marker
+!
+!
+vrf definition BE
+ rd 20:20
+ !
+ address-family ipv4
+ exit-address-family
+!
+vrf definition FE
+ rd 10:10
+ !
+ address-family ipv4
+ exit-address-family
+!
+!
+no aaa new-model
+!
+!
+!
+!
+!
+!
+!
+!
+!
+
+
+
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+subscriber templating
+!
+!
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+license udi pid CSR1000V sn 9TQC0Z61EF9
+!
+spanning-tree extend system-id
+!
+!
+redundancy
+!
+!
+!
+!
+!
+!
+! 
+crypto keyring KR vrf FE 
+  pre-shared-key address 0.0.0.0 0.0.0.0 key cisco
+!
+!
+!
+!
+!
+crypto isakmp policy 10
+ encr 3des
+ hash md5
+ authentication pre-share
+!
+crypto isakmp policy 20
+ encr aes 256
+ hash sha512
+ authentication pre-share
+ group 24
+crypto isakmp profile IKE-PROF
+   keyring KR
+   match identity address 0.0.0.0 FE
+!
+!
+crypto ipsec transform-set 3DES esp-3des esp-md5-hmac 
+ mode tunnel
+crypto ipsec transform-set AES-256 esp-aes 256 esp-sha512-hmac 
+ mode tunnel
+!
+crypto ipsec profile IPSEC-PROF
+ set transform-set 3DES AES-256 
+ set isakmp-profile IKE-PROF
+!
+!
+!
+!
+!
+!
+! 
+! 
+! 
+! 
+! 
+! 
+!
+!
+interface Loopback0
+ vrf forwarding FE
+ ip address 3.3.3.3 255.255.255.255
+ ip ospf network point-to-point
+ ip ospf 10 area 0.0.0.0
+!
+interface Tunnel100
+ vrf forwarding BE
+ ip address 172.16.23.3 255.255.255.0
+ tunnel source Loopback0
+ tunnel destination 2.2.2.2
+ tunnel vrf FE
+ tunnel protection ipsec profile IPSEC-PROF shared
+!
+interface GigabitEthernet1
+ no ip address
+ shutdown
+ negotiation auto
+!
+interface GigabitEthernet2
+ vrf forwarding FE
+ ip address 192.168.13.3 255.255.255.0
+ ip ospf network point-to-point
+ ip ospf 10 area 0.0.0.0
+ negotiation auto
+!
+interface GigabitEthernet3
+ vrf forwarding BE
+ ip address 11.1.1.1 255.255.255.0
+ negotiation auto
+!
+router ospf 10 vrf FE
+ router-id 3.3.3.3
+ passive-interface default
+ no passive-interface GigabitEthernet2
+ no passive-interface Loopback0
+!
+router bgp 1
+ bgp router-id 3.3.3.3
+ bgp log-neighbor-changes
+ no bgp default ipv4-unicast
+ !
+ address-family ipv4 vrf BE
+  bgp router-id 3.3.3.3
+  network 11.1.1.0 mask 255.255.255.0
+  neighbor 172.16.23.2 remote-as 1
+  neighbor 172.16.23.2 timers 10 30
+  neighbor 172.16.23.2 activate
+ exit-address-family
+!
+!
+virtual-service csr_mgmt
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+ip tftp source-interface GigabitEthernet1
+!
+!
+!
+!
+!
+control-plane
+!
+ !
+ !
+ !
+ !
+!
+!
+!
+!
+!
+line con 0
+ stopbits 1
+line vty 0
+ login
+line vty 1
+ login
+ length 0
+line vty 2 4
+ login
+!
+!
+end</entry>
+        </extensions>
+        <interface id="0" name="GigabitEthernet2"/>
+        <interface id="1" name="GigabitEthernet3"/>
+    </node>
+    <node name="iosv-1" type="SIMPLE" subtype="IOSv" location="390,480">
+        <extensions>
+            <entry key="AutoNetkit.ASN" type="Integer">1</entry>
+            <entry key="config" type="String">!
+! Last configuration change at 20:53:51 UTC Fri Mar 31 2017
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname H1
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+ethernet lmi ce
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+redundancy
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/1
+ ip address 10.1.1.100 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 10.1.1.1
+!
+!
+!
+!
+control-plane
+!
+banner exec `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+banner incoming `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+banner login `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+!
+line con 0
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+no scheduler allocate
+!
+end</entry>
+        </extensions>
+        <interface id="0" name="GigabitEthernet0/1"/>
+    </node>
+    <node name="iosv-2" type="SIMPLE" subtype="IOSv" location="763,480">
+        <extensions>
+            <entry key="AutoNetkit.ASN" type="Integer">1</entry>
+            <entry key="config" type="String">!
+! Last configuration change at 20:52:27 UTC Fri Mar 31 2017
+!
+version 15.6
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname H2
+!
+boot-start-marker
+boot-end-marker
+!
+!
+!
+no aaa new-model
+ethernet lmi ce
+!
+!
+!
+mmi polling-interval 60
+no mmi auto-configure
+no mmi pvc
+mmi snmp-timeout 180
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+no ip domain lookup
+ip cef
+no ipv6 cef
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+!
+redundancy
+!
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+!
+interface GigabitEthernet0/0
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ media-type rj45
+!
+interface GigabitEthernet0/1
+ ip address 11.1.1.100 255.255.255.0
+ duplex auto
+ speed auto
+ media-type rj45
+!
+ip forward-protocol nd
+!
+!
+no ip http server
+no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 11.1.1.1
+!
+!
+!
+!
+control-plane
+!
+banner exec `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+banner incoming `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+banner login `
+**************************************************************************
+* IOSv is strictly limited to use for evaluation, demonstration and IOS  *
+* education. IOSv is provided as-is and is not supported by Cisco's      *
+* Technical Advisory Center. Any use or disclosure, in whole or in part, *
+* of the IOSv Software or Documentation to any third party for any       *
+* purposes is expressly prohibited except as otherwise authorized by     *
+* Cisco in writing.                                                      *
+**************************************************************************`
+!
+line con 0
+line aux 0
+line vty 0 4
+ login
+ transport input none
+!
+no scheduler allocate
+!
+end</entry>
+        </extensions>
+        <interface id="0" name="GigabitEthernet0/1"/>
+    </node>
+    <connection dst="/virl:topology/virl:node[2]/virl:interface[1]" src="/virl:topology/virl:node[1]/virl:interface[1]"/>
+    <connection dst="/virl:topology/virl:node[3]/virl:interface[1]" src="/virl:topology/virl:node[1]/virl:interface[2]"/>
+    <connection dst="/virl:topology/virl:node[4]/virl:interface[1]" src="/virl:topology/virl:node[2]/virl:interface[2]"/>
+    <connection dst="/virl:topology/virl:node[5]/virl:interface[1]" src="/virl:topology/virl:node[3]/virl:interface[2]"/>
+</topology>
